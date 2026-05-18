@@ -69,6 +69,15 @@ function HistoryItem({
         </TouchableOpacity>
       </View>
 
+      {!!item.fazenda && (
+        <View style={styles.fazendaRow}>
+          <Feather name="map-pin" size={12} color={colors.mutedForeground} />
+          <Text style={[styles.fazendaText, { color: colors.mutedForeground }]} numberOfLines={1}>
+            {item.fazenda}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.itemMeta}>
         <View style={[styles.badge, { backgroundColor: colors.muted }]}>
           <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>
@@ -213,6 +222,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     flexWrap: "wrap",
+  },
+  fazendaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginBottom: 4,
+  },
+  fazendaText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    flex: 1,
   },
   nutrientChip: {
     flexDirection: "row",

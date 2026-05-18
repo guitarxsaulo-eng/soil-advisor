@@ -230,6 +230,7 @@ function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.65);margin-bottom:6px">
       Relatório de Análise de Solo · Embrapa Cerrado${cost ? " · Com Custo de Adubação" : ""}
     </div>
+    ${result.fazenda ? `<div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:4px">📍 ${escapeHtml(result.fazenda)}</div>` : ""}
     <div style="font-size:24px;font-weight:700;margin-bottom:2px">${escapeHtml(result.cropName)}</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:18px">${date} · Solo ${textureLabel}</div>
 

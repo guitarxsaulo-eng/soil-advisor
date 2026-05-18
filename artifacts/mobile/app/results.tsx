@@ -167,6 +167,14 @@ export default function ResultsScreen() {
       ]}
     >
       <View style={[styles.headerCard, { backgroundColor: colors.primary }]}>
+        {!!result.fazenda && (
+          <View style={styles.headerFazendaRow}>
+            <Feather name="map-pin" size={12} color="rgba(255,255,255,0.6)" />
+            <Text style={[styles.headerFazenda, { color: "rgba(255,255,255,0.75)" }]} numberOfLines={1}>
+              {result.fazenda}
+            </Text>
+          </View>
+        )}
         <Text style={[styles.headerCrop, { color: colors.primaryForeground }]}>
           {cropName}
         </Text>
@@ -321,6 +329,16 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     gap: 4,
+  },
+  headerFazendaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginBottom: 4,
+  },
+  headerFazenda: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
   },
   headerCrop: {
     fontSize: 22,

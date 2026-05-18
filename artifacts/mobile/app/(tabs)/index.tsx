@@ -40,6 +40,7 @@ const DEFAULT_INPUT: SoilInput = {
   targetV: "50",
   cropType: "soja",
   cropName: "",
+  fazenda: "",
 };
 
 export default function AnalysisScreen() {
@@ -155,6 +156,13 @@ export default function AnalysisScreen() {
 
         <View style={styles.divider} />
 
+        <TextField
+          label="Fazenda / Propriedade (opcional)"
+          value={input.fazenda}
+          onChangeText={set("fazenda")}
+          placeholder="Ex: Fazenda Boa Esperança"
+          keyboardType="default"
+        />
         <TextField
           label="Identificação / Talhão (opcional)"
           value={input.cropName}
