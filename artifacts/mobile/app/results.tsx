@@ -54,24 +54,50 @@ function NutrientRow({ item }: { item: NutrientInterpretation }) {
 
 function FertCard({ rec }: { rec: FertilizationRec }) {
   const colors = useColors();
+  const isNitrogen = rec.nutrient.includes("Nitrogênio");
   let icon: keyof typeof Feather.glyphMap = "droplet";
-  if (rec.nutrient.includes("Potássio")) icon = "zap";
+  if (isNitrogen) icon = "wind";
+  else if (rec.nutrient.includes("Potássio")) icon = "zap";
   else if (rec.nutrient.includes("Cálcio")) icon = "shield";
   else if (rec.nutrient.includes("Magnésio")) icon = "star";
   else if (rec.nutrient.includes("Enxofre")) icon = "sun";
 
+  const lines = rec.recommendation.split("\n").filter(Boolean);
+
   return (
     <View style={[styles.fertCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.fertHeader}>
-        <View style={[styles.fertIconWrap, { backgroundColor: `${colors.primary}18` }]}>
-          <Feather name={icon} size={16} color={colors.primary} />
+        <View
+          style={[
+            styles.fertIconWrap,
+            { backgroundColor: isNitrogen ? "#EAF4FD" : `${colors.primary}18` },
+          ]}
+        >
+          <Feather name={icon} size={16} color={isNitrogen ? colors.info : colors.primary} />
         </View>
         <View style={styles.fertTitleWrap}>
           <Text style={[styles.fertNutrient, { color: colors.foreground }]}>{rec.nutrient}</Text>
-          <ClassBadge cls={rec.classification} />
+          {rec.classification !== "n/a" && <ClassBadge cls={rec.classification} />}
         </View>
       </View>
-      <Text style={[styles.fertRec, { color: colors.foreground }]}>{rec.recommendation}</Text>
+
+      {lines.length > 1 ? (
+        <View style={styles.nLines}>
+          {lines.map((line, i) => {
+            const [label, ...rest] = line.split(": ");
+            const value = rest.join(": ");
+            return (
+              <View key={i} style={[styles.nLine, { borderColor: colors.border }]}>
+                <Text style={[styles.nLineLabel, { color: colors.mutedForeground }]}>{label}</Text>
+                <Text style={[styles.nLineValue, { color: colors.foreground }]}>{value}</Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={[styles.fertRec, { color: colors.foreground }]}>{rec.recommendation}</Text>
+      )}
+
       {rec.note ? (
         <View style={[styles.noteRow, { backgroundColor: colors.earthLight ?? "#F5E6C0" }]}>
           <Feather name="info" size={13} color={colors.earth ?? "#8B6914"} />
@@ -403,6 +429,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     lineHeight: 21,
+  },
+  nLines: {
+    gap: 6,
+  },
+  nLine: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    padding: 10,
+    gap: 2,
+  },
+  nLineLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  nLineValue: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
   },
   noteRow: {
     flexDirection: "row",
