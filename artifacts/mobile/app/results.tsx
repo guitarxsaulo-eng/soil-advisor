@@ -1,7 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAnalysis } from "@/context/AnalysisContext";
 import { useColors } from "@/hooks/useColors";
 import type { AnalysisResult, FertilizationRec, NutrientInterpretation } from "@/lib/embrapa";
+import { exportResultAsPdf } from "@/lib/generatePdf";
 
 function ClassBadge({ cls }: { cls: string }) {
   const colors = useColors();
@@ -114,11 +117,24 @@ export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { analyses } = useAnalysis();
+  const [exporting, setExporting] = useState(false);
 
   const result: AnalysisResult | undefined = useMemo(
     () => analyses.find((a) => a.id === id),
     [analyses, id]
   );
+
+  async function handleExportPdf() {
+    if (!result || exporting) return;
+    setExporting(true);
+    try {
+      await exportResultAsPdf(result);
+    } catch (e) {
+      Alert.alert("Erro ao exportar", "Não foi possível gerar o PDF. Tente novamente.");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (!result) {
     return (
@@ -244,6 +260,32 @@ export default function ResultsScreen() {
           validação local e calibração por cultura.
         </Text>
       </View>
+
+      <TouchableOpacity
+        onPress={handleExportPdf}
+        activeOpacity={0.85}
+        disabled={exporting}
+        style={[
+          styles.exportBtn,
+          { backgroundColor: exporting ? colors.muted : colors.primary },
+        ]}
+      >
+        {exporting ? (
+          <>
+            <ActivityIndicator size="small" color={colors.primaryForeground} />
+            <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>
+              Gerando PDF...
+            </Text>
+          </>
+        ) : (
+          <>
+            <Feather name="file-text" size={18} color={colors.primaryForeground} />
+            <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>
+              Exportar PDF
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => router.back()}
@@ -475,6 +517,18 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     flex: 1,
     lineHeight: 18,
+  },
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 16,
+  },
+  exportBtnText: {
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
   },
   backBtn: {
     flexDirection: "row",
