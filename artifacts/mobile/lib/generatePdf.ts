@@ -232,7 +232,7 @@ function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
     </div>
     ${result.fazenda ? `<div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:4px">📍 ${escapeHtml(result.fazenda)}</div>` : ""}
     <div style="font-size:24px;font-weight:700;margin-bottom:2px">${escapeHtml(result.cropName)}</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:18px">${date} · Solo ${textureLabel}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:18px">${date}${result.safra ? ` · Safra ${escapeHtml(result.safra)}` : ""} · Solo ${textureLabel}</div>
 
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
       <div style="text-align:center">
@@ -338,7 +338,7 @@ function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
 
   <!-- Disclaimer -->
   <div style="background:#E8E3DA;border-radius:10px;padding:12px 14px;font-size:11px;color:#6B7B6B;line-height:1.6">
-    📖 Recomendações baseadas no Boletim Técnico da Embrapa Cerrado. Consulte um Engenheiro Agrônomo habilitado para validação local, calibração por cultivar e condições específicas da lavoura. Gerado pelo app Solo Cerrado em ${date}.
+    📖 Recomendações baseadas no Boletim Técnico da Embrapa Cerrado. Consulte um Engenheiro Agrônomo habilitado para validação local, calibração por cultivar e condições específicas da lavoura. Gerado pelo app AGROSSB em ${date}.
   </div>
 
 </div>

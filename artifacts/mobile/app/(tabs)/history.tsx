@@ -84,6 +84,13 @@ function HistoryItem({
             {item.texture === "argilosa" ? "Argilosa" : item.texture === "media" ? "Média" : "Arenosa"}
           </Text>
         </View>
+        {!!item.safra && (
+          <View style={[styles.badge, { backgroundColor: `${colors.primary}18` }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>
+              Safra {item.safra}
+            </Text>
+          </View>
+        )}
         <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
           {dateStr} — {timeStr}
         </Text>

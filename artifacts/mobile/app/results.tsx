@@ -179,7 +179,7 @@ export default function ResultsScreen() {
           {cropName}
         </Text>
         <Text style={[styles.headerDate, { color: "rgba(255,255,255,0.7)" }]}>
-          {date} · {texture === "argilosa" ? "Argilosa" : texture === "media" ? "Média" : "Arenosa"}
+          {date}{result.safra ? ` · Safra ${result.safra}` : ""} · {texture === "argilosa" ? "Argilosa" : texture === "media" ? "Média" : "Arenosa"}
         </Text>
         <View style={styles.vStats}>
           <View style={styles.vStat}>

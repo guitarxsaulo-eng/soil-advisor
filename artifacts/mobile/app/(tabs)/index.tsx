@@ -41,6 +41,7 @@ const DEFAULT_INPUT: SoilInput = {
   cropType: "soja",
   cropName: "",
   fazenda: "",
+  safra: "",
 };
 
 export default function AnalysisScreen() {
@@ -107,10 +108,10 @@ export default function AnalysisScreen() {
       <View style={[styles.heroInner, { backgroundColor: colors.primary }]}>
         <Feather name="activity" size={24} color={colors.primaryForeground} />
         <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>
-          Análise de Solo
+          AGROSSB
         </Text>
         <Text style={[styles.heroSub, { color: "rgba(255,255,255,0.75)" }]}>
-          Embrapa Cerrado — Recomendações de calagem e adubação
+          Análise de Solo · Embrapa Cerrado
         </Text>
       </View>
 
@@ -167,7 +168,14 @@ export default function AnalysisScreen() {
           label="Identificação / Talhão (opcional)"
           value={input.cropName}
           onChangeText={set("cropName")}
-          placeholder="Ex: Talhão 3 — Safra 24/25"
+          placeholder="Ex: Talhão 3"
+          keyboardType="default"
+        />
+        <TextField
+          label="Safra (opcional)"
+          value={input.safra}
+          onChangeText={set("safra")}
+          placeholder="Ex: 24/25 ou 2025"
           keyboardType="default"
         />
         <SelectField
