@@ -19,7 +19,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAnalysis } from "@/context/AnalysisContext";
 import { useColors } from "@/hooks/useColors";
 import {
+  BAG_SIZE_OPTIONS,
   computeCosts,
+  DEFAULT_BAG_SIZES,
   extractNutrientLines,
   PRODUCTS,
   totalCostPerHa,
@@ -88,10 +90,11 @@ export default function CostScreen() {
   const [area, setArea] = useState("1");
   const [areaPreset, setAreaPreset] = useState(1);
   const [exporting, setExporting] = useState(false);
+  const [bagSizes, setBagSizes] = useState<Record<NutrientKey, number>>({ ...DEFAULT_BAG_SIZES });
 
   const costLines = useMemo(
-    () => computeCosts(nutrientLines, selectedProducts, prices),
-    [nutrientLines, selectedProducts, prices]
+    () => computeCosts(nutrientLines, selectedProducts, prices, bagSizes),
+    [nutrientLines, selectedProducts, prices, bagSizes]
   );
 
   const totalPerHa = useMemo(() => totalCostPerHa(costLines), [costLines]);
@@ -155,7 +158,7 @@ export default function CostScreen() {
           {result.cropName}
         </Text>
         <Text style={[styles.headerNote, { color: "rgba(255,255,255,0.55)" }]}>
-          Selecione os produtos e informe o preço por saca (60 kg) ou por tonelada para calcário.
+          Selecione os produtos, o tamanho da embalagem (sc 60 kg ou Big Bag 1.000 kg) e informe o preço.
         </Text>
       </View>
 
@@ -167,7 +170,12 @@ export default function CostScreen() {
         const icon = NUTRIENT_ICONS[line.nutrientKey];
         const costLine = costLines.find((c) => c.nutrientKey === line.nutrientKey);
         const isLime = line.nutrientKey === "lime";
-        const bagUnit = isLime ? "tonelada" : "saca 60 kg";
+        const currentBagKg = isLime ? 1000 : (bagSizes[line.nutrientKey] ?? 60);
+        const bagUnit = isLime
+          ? "tonelada"
+          : currentBagKg === 1000
+          ? "Big Bag 1.000 kg"
+          : "saca 60 kg";
 
         return (
           <View
@@ -259,6 +267,41 @@ export default function CostScreen() {
                   })}
                 </ScrollView>
 
+                {/* Bag size selector (fertilizers only) */}
+                {!isLime && (
+                  <>
+                    <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                      TAMANHO DA EMBALAGEM
+                    </Text>
+                    <View style={styles.bagSizeRow}>
+                      {BAG_SIZE_OPTIONS.map((opt) => {
+                        const sel = currentBagKg === opt.value;
+                        return (
+                          <TouchableOpacity
+                            key={opt.value}
+                            onPress={() => {
+                              Haptics.selectionAsync();
+                              setBagSizes((prev) => ({ ...prev, [line.nutrientKey]: opt.value }));
+                            }}
+                            activeOpacity={0.75}
+                            style={[
+                              styles.bagSizeBtn,
+                              {
+                                backgroundColor: sel ? accentColor : colors.muted,
+                                borderColor: sel ? accentColor : colors.border,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.bagSizeBtnText, { color: sel ? "#fff" : colors.foreground }]}>
+                              {opt.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                )}
+
                 {/* Price input */}
                 <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
                   PREÇO POR {bagUnit.toUpperCase()}
@@ -299,10 +342,10 @@ export default function CostScreen() {
                     <View style={[styles.outputDivider, { backgroundColor: colors.border }]} />
                     <View style={styles.outputItem}>
                       <Text style={[styles.outputLabel, { color: colors.mutedForeground }]}>
-                        {isLime ? "Toneladas/ha" : "Sacas/ha"}
+                        {isLime ? "Ton./ha" : currentBagKg === 1000 ? "Big Bags/ha" : "Sacas/ha"}
                       </Text>
                       <Text style={[styles.outputValue, { color: colors.foreground }]}>
-                        {fmtNum(isLime ? costLine.bagsPerHa : costLine.bagsPerHa)}
+                        {fmtNum(costLine.bagsPerHa)}
                       </Text>
                     </View>
                     <View style={[styles.outputDivider, { backgroundColor: colors.border }]} />
@@ -679,6 +722,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  bagSizeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 2,
+  },
+  bagSizeBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 9,
+    alignItems: "center",
+  },
+  bagSizeBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+  },
   exportBtn: {
     flexDirection: "row",
     alignItems: "center",

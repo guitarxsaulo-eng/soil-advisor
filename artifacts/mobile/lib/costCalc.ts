@@ -138,16 +138,31 @@ export interface CostLine {
   costPerHa: number;
 }
 
+export const BAG_SIZE_OPTIONS: { label: string; value: number }[] = [
+  { label: "sc 60 kg", value: 60 },
+  { label: "Big Bag 1.000 kg", value: 1000 },
+];
+
+export const DEFAULT_BAG_SIZES: Record<NutrientKey, number> = {
+  N: 60,
+  P2O5: 60,
+  K2O: 60,
+  S: 60,
+  lime: 1000,
+};
+
 export function computeCosts(
   lines: NutrientLine[],
   selectedProducts: Record<NutrientKey, string>,
-  pricesPerBag: Record<NutrientKey, string>
+  pricesPerBag: Record<NutrientKey, string>,
+  bagSizes: Record<NutrientKey, number> = DEFAULT_BAG_SIZES
 ): CostLine[] {
   return lines.map((line) => {
     const products = PRODUCTS[line.nutrientKey];
     const prodId = selectedProducts[line.nutrientKey] ?? products[0].id;
     const product = products.find((p) => p.id === prodId) ?? products[0];
     const pricePerBag = parseFloat(pricesPerBag[line.nutrientKey]?.replace(",", ".") ?? "0") || 0;
+    const effectiveBagKg = line.nutrientKey === "lime" ? 1000 : (bagSizes[line.nutrientKey] ?? 60);
 
     if (line.noNeed || !line.dose) {
       return {
@@ -170,7 +185,7 @@ export function computeCosts(
       productKgPerHa = activeKgPerHa / (product.contentPercent / 100);
     }
 
-    const bagsPerHa = productKgPerHa / product.bagKg;
+    const bagsPerHa = productKgPerHa / effectiveBagKg;
     const costPerHa = bagsPerHa * pricePerBag;
 
     return { ...line, product, pricePerBag, productKgPerHa, bagsPerHa, costPerHa };
