@@ -40,6 +40,13 @@ function RootLayoutNav() {
           headerBackTitle: "Voltar",
         }}
       />
+      <Stack.Screen
+        name="cost"
+        options={{
+          title: "Custo de Adubação",
+          headerBackTitle: "Voltar",
+        }}
+      />
     </Stack>
   );
 }

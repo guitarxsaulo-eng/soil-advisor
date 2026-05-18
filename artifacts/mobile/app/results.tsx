@@ -262,6 +262,17 @@ export default function ResultsScreen() {
       </View>
 
       <TouchableOpacity
+        onPress={() => router.push({ pathname: "/cost", params: { id: result.id } })}
+        activeOpacity={0.85}
+        style={[styles.costBtn, { backgroundColor: colors.earth ?? "#8B6914", borderColor: colors.earth ?? "#8B6914" }]}
+      >
+        <Feather name="dollar-sign" size={18} color="#fff" />
+        <Text style={[styles.exportBtnText, { color: "#fff" }]}>
+          Calcular Custo de Adubação
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         onPress={handleExportPdf}
         activeOpacity={0.85}
         disabled={exporting}
@@ -517,6 +528,15 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     flex: 1,
     lineHeight: 18,
+  },
+  costBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderWidth: 1,
   },
   exportBtn: {
     flexDirection: "row",
