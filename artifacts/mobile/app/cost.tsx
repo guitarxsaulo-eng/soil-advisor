@@ -3,6 +3,8 @@ import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -23,6 +25,7 @@ import {
   totalCostPerHa,
 } from "@/lib/costCalc";
 import type { NutrientKey } from "@/lib/costCalc";
+import { exportResultWithCostAsPdf } from "@/lib/generatePdf";
 
 const NUTRIENT_ICONS: Record<NutrientKey, keyof typeof import("@expo/vector-icons").Feather.glyphMap> = {
   N: "wind",
@@ -84,6 +87,7 @@ export default function CostScreen() {
   });
   const [area, setArea] = useState("1");
   const [areaPreset, setAreaPreset] = useState(1);
+  const [exporting, setExporting] = useState(false);
 
   const costLines = useMemo(
     () => computeCosts(nutrientLines, selectedProducts, prices),
@@ -97,6 +101,23 @@ export default function CostScreen() {
   function selectArea(a: number) {
     setAreaPreset(a);
     setArea(String(a));
+  }
+
+  async function handleExportPdf() {
+    if (!result || exporting) return;
+    setExporting(true);
+    try {
+      await exportResultWithCostAsPdf(result, {
+        costLines,
+        totalPerHa,
+        areaHa: areaNum,
+        totalArea,
+      });
+    } catch {
+      Alert.alert("Erro ao exportar", "Não foi possível gerar o PDF. Tente novamente.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (!result) {
@@ -397,6 +418,25 @@ export default function CostScreen() {
       </View>
 
       <TouchableOpacity
+        onPress={handleExportPdf}
+        disabled={exporting}
+        style={[
+          styles.exportBtn,
+          { backgroundColor: exporting ? colors.mutedForeground : "#8B6914" },
+        ]}
+        activeOpacity={0.8}
+      >
+        {exporting ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Feather name="file-text" size={16} color="#fff" />
+        )}
+        <Text style={styles.exportBtnText}>
+          {exporting ? "Gerando PDF…" : "Exportar PDF com Custo"}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         onPress={() => router.back()}
         style={[styles.backBtn, { borderColor: colors.border }]}
         activeOpacity={0.75}
@@ -639,6 +679,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 16,
+  },
+  exportBtnText: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    color: "#fff",
+  },
   backBtn: {
     flexDirection: "row",
     alignItems: "center",

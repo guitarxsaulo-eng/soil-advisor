@@ -2,6 +2,14 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
 import type { AnalysisResult, NutrientClass } from "./embrapa";
+import type { CostLine } from "./costCalc";
+
+export interface PdfCostData {
+  costLines: CostLine[];
+  totalPerHa: number;
+  areaHa: number;
+  totalArea: number;
+}
 
 function classLabel(cls: NutrientClass | "n/a"): string {
   if (cls === "n/a") return "—";
@@ -42,7 +50,107 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildHtml(result: AnalysisResult): string {
+function fmtBRL(val: number): string {
+  return val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function fmtNum(val: number, dec = 1): string {
+  return val.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function buildCostSection(cost: PdfCostData): string {
+  const NUTRIENT_COLORS: Record<string, string> = {
+    N: "#2980B9", P2O5: "#8E44AD", K2O: "#E67E22", S: "#F1C40F", lime: "#27AE60",
+  };
+
+  const activeLines = cost.costLines.filter((l) => !l.noNeed && l.dose);
+  const paidLines = activeLines.filter((l) => l.costPerHa > 0);
+
+  const detailRows = activeLines.map((l) => {
+    const color = NUTRIENT_COLORS[l.nutrientKey] ?? "#6B7B6B";
+    const isLime = l.nutrientKey === "lime";
+    const doseStr = l.dose
+      ? isLime
+        ? `${fmtNum(l.dose.mid)} t/ha`
+        : `${fmtNum(l.dose.low, 0)}–${fmtNum(l.dose.high, 0)} kg/ha`
+      : "—";
+    const bagUnit = isLime ? "t" : "sc";
+    const bagsStr = l.bagsPerHa > 0 ? `${fmtNum(l.bagsPerHa)} ${bagUnit}/ha` : "—";
+    const prodStr = l.productKgPerHa > 0 ? `${fmtNum(l.productKgPerHa, 0)} kg/ha` : "—";
+    const costStr = l.costPerHa > 0 ? fmtBRL(l.costPerHa) : "—";
+
+    return `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #F0EDE6">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle"></span>
+        <strong style="font-size:13px">${escapeHtml(l.label)}</strong><br/>
+        <span style="font-size:11px;color:#6B7B6B">${escapeHtml(l.product.name)} · ${l.product.contentPercent}%</span>
+      </td>
+      <td style="padding:10px 12px;border-bottom:1px solid #F0EDE6;text-align:center;font-size:12px;color:#6B7B6B">${doseStr}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #F0EDE6;text-align:center;font-size:12px">${prodStr}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #F0EDE6;text-align:center;font-size:12px">${bagsStr}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #F0EDE6;text-align:right;font-size:13px;font-weight:700;color:${l.costPerHa > 0 ? color : "#aaa"}">${costStr}</td>
+    </tr>`;
+  }).join("");
+
+  const summaryRows = paidLines.map((l) =>
+    `<tr>
+      <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(255,255,255,0.85)">${escapeHtml(l.label)}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.1);text-align:right;font-size:13px;font-weight:600;color:#fff">${fmtBRL(l.costPerHa)}/ha</td>
+    </tr>`
+  ).join("");
+
+  const totalAreaBlock = cost.areaHa > 1 && cost.totalArea > 0
+    ? `<div style="margin-top:16px;background:rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.65);margin-bottom:4px">
+          Total para ${fmtNum(cost.areaHa, 0)} ha
+        </div>
+        <div style="font-size:30px;font-weight:700;color:#fff">${fmtBRL(cost.totalArea)}</div>
+      </div>`
+    : "";
+
+  const noPricesNote = paidLines.length === 0
+    ? `<p style="color:rgba(255,255,255,0.55);font-size:13px;text-align:center;margin-top:8px">Nenhum preço informado — custo total não calculado.</p>`
+    : "";
+
+  return `
+  <!-- Custo de Adubação -->
+  <div style="background:#fff;border:1px solid #D9D3C7;border-radius:14px;padding:16px;margin-bottom:16px;overflow:hidden">
+    <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8B6914;margin-bottom:12px">
+      💰 Custo de Adubação por Hectare
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#F4F1EC">
+          <th style="padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#6B7B6B;font-weight:600">Nutriente / Produto</th>
+          <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#6B7B6B;font-weight:600">Dose ativo</th>
+          <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#6B7B6B;font-weight:600">Produto/ha</th>
+          <th style="padding:8px 12px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#6B7B6B;font-weight:600">Sacas/ha</th>
+          <th style="padding:8px 12px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:#6B7B6B;font-weight:600">Custo/ha</th>
+        </tr>
+      </thead>
+      <tbody>${detailRows}</tbody>
+    </table>
+  </div>
+
+  <!-- Resumo financeiro -->
+  <div style="background:#8B6914;border-radius:14px;padding:18px;margin-bottom:16px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.65);margin-bottom:12px">
+      Resumo Financeiro
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <tbody>${summaryRows}</tbody>
+    </table>
+    ${paidLines.length > 0 ? `
+    <div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:15px;font-weight:600;color:#fff">Total por hectare</span>
+      <span style="font-size:24px;font-weight:700;color:#fff">${fmtBRL(cost.totalPerHa)}</span>
+    </div>` : ""}
+    ${noPricesNote}
+    ${totalAreaBlock}
+  </div>`;
+}
+
+function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
   const date = new Date(result.date).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",
@@ -120,12 +228,12 @@ function buildHtml(result: AnalysisResult): string {
   <!-- Header -->
   <div style="background:#2D6A4F;border-radius:16px;padding:24px;color:#fff;margin-bottom:16px">
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.65);margin-bottom:6px">
-      Relatório de Análise de Solo · Embrapa Cerrado
+      Relatório de Análise de Solo · Embrapa Cerrado${cost ? " · Com Custo de Adubação" : ""}
     </div>
     <div style="font-size:24px;font-weight:700;margin-bottom:2px">${escapeHtml(result.cropName)}</div>
     <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:18px">${date} · Solo ${textureLabel}</div>
 
-    <div style="display:flex;gap:24px;align-items:center">
+    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
       <div style="text-align:center">
         <div style="font-size:28px;font-weight:700">${liming.currentV}%</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.65)">V% atual</div>
@@ -144,6 +252,12 @@ function buildHtml(result: AnalysisResult): string {
         <div style="font-size:28px;font-weight:700">${liming.sb}</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.65)">SB cmolc/dm³</div>
       </div>
+      ${cost && cost.totalPerHa > 0 ? `
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.2)"></div>
+      <div style="text-align:center">
+        <div style="font-size:20px;font-weight:700">${fmtBRL(cost.totalPerHa)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.65)">Custo/ha</div>
+      </div>` : ""}
     </div>
   </div>
 
@@ -188,6 +302,8 @@ function buildHtml(result: AnalysisResult): string {
     ${fertCards}
   </div>
 
+  ${cost ? buildCostSection(cost) : ""}
+
   <!-- Dados de entrada -->
   <div style="background:#fff;border:1px solid #D9D3C7;border-radius:14px;padding:16px;margin-bottom:16px">
     <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#2D6A4F;margin-bottom:12px">
@@ -229,19 +345,30 @@ function buildHtml(result: AnalysisResult): string {
 </html>`;
 }
 
-export async function exportResultAsPdf(result: AnalysisResult): Promise<void> {
-  const html = buildHtml(result);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
-
+async function sharePdf(uri: string, cropName: string): Promise<void> {
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {
-    const safeName = result.cropName.replace(/[^a-zA-Z0-9-_\s]/g, "").trim().replace(/\s+/g, "_");
     await Sharing.shareAsync(uri, {
       mimeType: "application/pdf",
-      dialogTitle: `Análise de Solo — ${result.cropName}`,
+      dialogTitle: `Análise de Solo — ${cropName}`,
       UTI: "com.adobe.pdf",
     });
   } else {
     await Print.printAsync({ uri });
   }
+}
+
+export async function exportResultAsPdf(result: AnalysisResult): Promise<void> {
+  const html = buildHtml(result);
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  await sharePdf(uri, result.cropName);
+}
+
+export async function exportResultWithCostAsPdf(
+  result: AnalysisResult,
+  cost: PdfCostData
+): Promise<void> {
+  const html = buildHtml(result, cost);
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  await sharePdf(uri, result.cropName);
 }
