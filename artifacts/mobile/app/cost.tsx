@@ -177,6 +177,12 @@ export default function CostScreen() {
           ? "Big Bag 1.000 kg"
           : "saca 60 kg";
 
+        const rawPriceNum = parseFloat(prices[line.nutrientKey]?.replace(",", ".") ?? "0") || 0;
+        const otherBagKg = currentBagKg === 60 ? 1000 : 60;
+        const convertedPrice = rawPriceNum > 0 ? rawPriceNum * (otherBagKg / currentBagKg) : 0;
+        const otherBagLabel = otherBagKg === 60 ? "sc 60 kg" : "Big Bag 1.000 kg";
+        const showConverter = !isLime && rawPriceNum > 0;
+
         return (
           <View
             key={line.nutrientKey}
@@ -325,6 +331,20 @@ export default function CostScreen() {
                     returnKeyType="done"
                   />
                 </View>
+
+                {/* Price converter */}
+                {showConverter && (
+                  <View style={[styles.converterRow, { backgroundColor: `${accentColor}10`, borderColor: `${accentColor}30` }]}>
+                    <Feather name="refresh-cw" size={12} color={accentColor} />
+                    <Text style={[styles.converterText, { color: colors.mutedForeground }]}>
+                      Equivale a{" "}
+                      <Text style={[styles.converterHighlight, { color: accentColor }]}>
+                        {convertedPrice.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </Text>
+                      {" "}por {otherBagLabel}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Output */}
                 {costLine && line.dose && (
@@ -722,6 +742,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  converterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 4,
+  },
+  converterText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    flex: 1,
+    lineHeight: 17,
+  },
+  converterHighlight: {
+    fontFamily: "Inter_700Bold",
+  },
   bagSizeRow: {
     flexDirection: "row",
     gap: 8,
