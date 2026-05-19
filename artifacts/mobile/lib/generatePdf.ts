@@ -76,7 +76,11 @@ function buildCostSection(cost: PdfCostData): string {
       : "—";
     const bagUnit = isLime ? "t" : "sc";
     const bagsStr = l.bagsPerHa > 0 ? `${fmtNum(l.bagsPerHa)} ${bagUnit}/ha` : "—";
-    const prodStr = l.productKgPerHa > 0 ? `${fmtNum(l.productKgPerHa, 0)} kg/ha` : "—";
+    const prodStr = l.productKgPerHa > 0
+      ? isLime
+        ? `${fmtNum(l.productKgPerHa / 1000, 1)} t/ha`
+        : `${fmtNum(l.productKgPerHa, 0)} kg/ha`
+      : "—";
     const costStr = l.costPerHa > 0 ? fmtBRL(l.costPerHa) : "—";
 
     return `<tr>
@@ -270,8 +274,7 @@ function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
     <div style="padding:14px;border-radius:10px;border:1px solid ${limingColor}40;background:${limingColor}12">
       ${liming.needsLiming
         ? `<div style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:${limingColor};font-weight:600;margin-bottom:4px">Dose recomendada</div>
-           <div style="font-size:26px;font-weight:700;color:${limingColor};margin-bottom:4px">${liming.dose} t/ha de calcário</div>
-           <div style="font-size:11px;color:#6B7B6B">(PRNT = 100%. Ajustar: dose × 100 / PRNT real)</div>`
+           <div style="font-size:26px;font-weight:700;color:${limingColor};margin-bottom:4px">${liming.dose} t/ha de calcário</div>`
         : `<div style="font-size:16px;font-weight:700;color:${limingColor}">✓ Saturação de bases adequada — calagem não necessária</div>`
       }
       <div style="margin-top:10px;font-size:12px;color:#6B7B6B;line-height:1.6">${escapeHtml(liming.note)}</div>

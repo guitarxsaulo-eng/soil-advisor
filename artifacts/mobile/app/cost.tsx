@@ -356,7 +356,9 @@ export default function CostScreen() {
                         Produto
                       </Text>
                       <Text style={[styles.outputValue, { color: colors.foreground }]}>
-                        {fmtNum(costLine.productKgPerHa, 0)} kg/ha
+                        {isLime
+                          ? `${fmtNum(costLine.productKgPerHa / 1000, 1)} t/ha`
+                          : `${fmtNum(costLine.productKgPerHa, 0)} kg/ha`}
                       </Text>
                     </View>
                     <View style={[styles.outputDivider, { backgroundColor: colors.border }]} />

@@ -175,14 +175,14 @@ export function computeCosts(
       };
     }
 
-    const activeKgPerHa = line.dose.mid;
+    const activeMid = line.dose.mid;
     let productKgPerHa: number;
 
     if (line.nutrientKey === "lime") {
-      const adjustedDose = activeKgPerHa * (100 / product.contentPercent);
-      productKgPerHa = adjustedDose;
+      // liming.dose is in t/ha → convert to kg/ha; price is per tonne of product
+      productKgPerHa = activeMid * 1000;
     } else {
-      productKgPerHa = activeKgPerHa / (product.contentPercent / 100);
+      productKgPerHa = activeMid / (product.contentPercent / 100);
     }
 
     const bagsPerHa = productKgPerHa / effectiveBagKg;
