@@ -261,6 +261,16 @@ export default function ResultsScreen() {
         <FertCard key={rec.nutrient} rec={rec} />
       ))}
 
+      {!!result.notes && (
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.sectionTitleRow}>
+            <Feather name="edit-3" size={18} color={colors.primary} />
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Observações</Text>
+          </View>
+          <Text style={[styles.notesText, { color: colors.foreground }]}>{result.notes}</Text>
+        </View>
+      )}
+
       <View style={[styles.disclaimer, { backgroundColor: colors.muted }]}>
         <Feather name="book-open" size={14} color={colors.mutedForeground} />
         <Text style={[styles.disclaimerText, { color: colors.mutedForeground }]}>
@@ -534,6 +544,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  notesText: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 22,
+  },
   disclaimer: {
     borderRadius: 10,
     padding: 12,

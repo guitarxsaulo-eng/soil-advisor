@@ -7,6 +7,7 @@ import {
   Platform,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -42,6 +43,7 @@ const DEFAULT_INPUT: SoilInput = {
   cropName: "",
   fazenda: "",
   safra: "",
+  notes: "",
 };
 
 export default function AnalysisScreen() {
@@ -276,6 +278,22 @@ export default function AnalysisScreen() {
         />
       </View>
 
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <SectionHeader title="Observações" subtitle="Anotações sobre o talhão, histórico ou condições do solo (opcional)" />
+        <View style={[styles.notesWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
+          <TextInput
+            style={[styles.notesInput, { color: colors.foreground }]}
+            value={input.notes}
+            onChangeText={set("notes")}
+            placeholder="Ex: Solo com histórico de compactação, última calagem há 3 anos..."
+            placeholderTextColor={colors.mutedForeground}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+        </View>
+      </View>
+
       <TouchableOpacity
         onPress={handleAnalyze}
         activeOpacity={0.85}
@@ -359,6 +377,18 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     flex: 1,
     lineHeight: 18,
+  },
+  notesWrap: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minHeight: 100,
+  },
+  notesInput: {
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 22,
   },
   analyzeBtn: {
     flexDirection: "row",

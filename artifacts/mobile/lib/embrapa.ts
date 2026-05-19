@@ -28,6 +28,7 @@ export interface SoilInput {
   cropName: string;
   fazenda: string;
   safra: string;
+  notes: string;
 }
 
 export type NutrientClass = "muito baixo" | "baixo" | "médio" | "bom" | "alto";
@@ -65,6 +66,7 @@ export interface AnalysisResult {
   texture: TextureClass;
   fazenda: string;
   safra: string;
+  notes: string;
   liming: LimingRecommendation;
   fertilization: FertilizationRec[];
   interpretations: NutrientInterpretation[];
@@ -658,6 +660,7 @@ export function analyzeRec(input: SoilInput): Omit<AnalysisResult, "id" | "date"
     texture: input.texture,
     fazenda: input.fazenda ?? "",
     safra: input.safra ?? "",
+    notes: input.notes ?? "",
     liming,
     fertilization,
     interpretations,

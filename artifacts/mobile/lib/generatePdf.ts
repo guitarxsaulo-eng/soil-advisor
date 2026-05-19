@@ -336,6 +336,15 @@ function buildHtml(result: AnalysisResult, cost?: PdfCostData): string {
     </table>
   </div>
 
+  ${result.notes ? `
+  <!-- Observações -->
+  <div style="background:#fff;border:1px solid #D9D3C7;border-radius:14px;padding:16px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#2D6A4F;margin-bottom:10px">
+      📝 Observações
+    </div>
+    <p style="font-size:13px;color:#1A2E1A;line-height:1.7;white-space:pre-wrap">${escapeHtml(result.notes)}</p>
+  </div>` : ""}
+
   <!-- Disclaimer -->
   <div style="background:#E8E3DA;border-radius:10px;padding:12px 14px;font-size:11px;color:#6B7B6B;line-height:1.6">
     📖 Recomendações baseadas no Boletim Técnico da Embrapa Cerrado. Consulte um Engenheiro Agrônomo habilitado para validação local, calibração por cultivar e condições específicas da lavoura. Gerado pelo app AGROSSB em ${date}.
