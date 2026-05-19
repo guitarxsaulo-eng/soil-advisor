@@ -32,10 +32,12 @@ function HistoryItem({
   item,
   onPress,
   onDelete,
+  onDuplicate,
 }: {
   item: AnalysisResult;
   onPress: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
 }) {
   const colors = useColors();
   const date = new Date(item.date);
@@ -64,9 +66,14 @@ function HistoryItem({
             {item.cropName}
           </Text>
         </View>
-        <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Feather name="trash-2" size={16} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        <View style={styles.itemActions}>
+          <TouchableOpacity onPress={onDuplicate} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Feather name="copy" size={16} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {!!item.fazenda && (
@@ -153,6 +160,13 @@ export default function HistoryScreen() {
           item={item}
           onPress={() => router.push({ pathname: "/results", params: { id: item.id } })}
           onDelete={() => confirmDelete(item.id)}
+          onDuplicate={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push({
+              pathname: "/(tabs)",
+              params: { prefill: JSON.stringify(item.input) },
+            });
+          }}
         />
       )}
       ListEmptyComponent={
@@ -183,6 +197,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  itemActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
   itemTitleRow: {
     flexDirection: "row",

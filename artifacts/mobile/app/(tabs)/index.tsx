@@ -1,9 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Platform,
   StyleSheet,
   Text,
@@ -52,6 +53,30 @@ export default function AnalysisScreen() {
   const insets = useSafeAreaInsets();
   const { saveAnalysis } = useAnalysis();
   const [input, setInput] = useState<SoilInput>(DEFAULT_INPUT);
+  const { prefill } = useLocalSearchParams<{ prefill?: string }>();
+  const bannerOpacity = useRef(new Animated.Value(0)).current;
+  const [bannerVisible, setBannerVisible] = useState(false);
+
+  useEffect(() => {
+    if (!prefill) return;
+    try {
+      const parsed = JSON.parse(prefill) as Partial<SoilInput>;
+      setInput({ ...DEFAULT_INPUT, ...parsed });
+      setBannerVisible(true);
+      bannerOpacity.setValue(1);
+      const timer = setTimeout(() => {
+        Animated.timing(bannerOpacity, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }).start(() => setBannerVisible(false));
+      }, 2800);
+      return () => clearTimeout(timer);
+    } catch {
+      // invalid JSON — ignore
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefill]);
 
   function set(field: keyof SoilInput) {
     return (v: string) => setInput((prev) => ({ ...prev, [field]: v }));
@@ -107,6 +132,15 @@ export default function AnalysisScreen() {
       keyboardShouldPersistTaps="handled"
       bottomOffset={20}
     >
+      {bannerVisible && (
+        <Animated.View style={[styles.prefillBanner, { backgroundColor: `${colors.primary}18`, borderColor: `${colors.primary}40`, opacity: bannerOpacity }]}>
+          <Feather name="copy" size={14} color={colors.primary} />
+          <Text style={[styles.prefillBannerText, { color: colors.primary }]}>
+            Dados da análise anterior foram pré-preenchidos. Ajuste o necessário antes de gerar.
+          </Text>
+        </Animated.View>
+      )}
+
       <View style={[styles.heroInner, { backgroundColor: colors.primary }]}>
         <Feather name="activity" size={24} color={colors.primaryForeground} />
         <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>
@@ -374,6 +408,21 @@ const styles = StyleSheet.create({
   },
   vHintText: {
     fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    flex: 1,
+    lineHeight: 18,
+  },
+  prefillBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 4,
+  },
+  prefillBannerText: {
+    fontSize: 13,
     fontFamily: "Inter_400Regular",
     flex: 1,
     lineHeight: 18,
