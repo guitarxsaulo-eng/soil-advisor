@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "dcf13e3a-f92b-4d82-884f-7b9421770b10"
+      }
+    },
+    "android": {
+      "package": "com.SAULO.agrossb"
+    }
+  }
+}
